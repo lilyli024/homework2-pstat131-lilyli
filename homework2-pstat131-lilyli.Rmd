@@ -1,0 +1,41 @@
+---
+title: 'PSTAT 131: Homework 2'
+author: "Lily Li"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE}
+library(tidyverse)
+library(tidymodels)
+library(corrplot)
+library(readr)
+abalone_data <- read_csv("~/Desktop/PSTAT 131/homework-2/data/abalone.csv") # read dataset through path
+```
+
+## Q1: 
+#### Add age to the data set. Assess and describe the distribution of age.
+```{r}
+abalone_data$age <- abalone_data$rings + 1.5
+
+ggplot(abalone_data, aes(x=age)) +
+  geom_histogram(binwidth=1) +
+  labs(x="Age") +
+
+summary(abalone_data$age)
+
+corrplot(cor(select_if(abalone_data, is.numeric)), method="number", type="lower")
+
+```
+
+# Q2:
+```{r}
+set.seed(123)
+data_split <- initial_split(abalone_data, prop = 3/4, strata = rings)
+train_data <- training(data_split)
+test_data <- testing(data_split)
+```
+
