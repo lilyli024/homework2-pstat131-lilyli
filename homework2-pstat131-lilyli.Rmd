@@ -23,13 +23,15 @@ abalone_data$age <- abalone_data$rings + 1.5
 
 ggplot(abalone_data, aes(x=age)) +
   geom_histogram(binwidth=1) +
-  labs(x="Age") +
+  labs(x="Age") 
 
 summary(abalone_data$age)
 
 corrplot(cor(select_if(abalone_data, is.numeric)), method="number", type="lower")
 
 ```
+
+The distribution of age is skewed right with most points centered at the peak around 10 or 11; this tells us that most ages of abalone measured fall slightly on the lower range. There are very large values that could be outliers around the ages of 28 and 30.
 
 # Q2:
 ```{r}
@@ -38,4 +40,20 @@ data_split <- initial_split(abalone_data, prop = 3/4, strata = rings)
 train_data <- training(data_split)
 test_data <- testing(data_split)
 ```
+
+## Q3:
+
+Rings should not be used to predict Age since the value of Age is directly calculated using Rings, thus creating the issue of multicollineairty. 
+
+```{r}
+age_recipe <- recipe(age ~ ., data = select(train_data, -rings)) %>%
+  step_normalize() %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_interact(terms = type~shucked_weight, longest_shell~diameter, shucked_weight~shell_weight)
+```
+
+## Q4. 
+#### Create and store a linear regression object using the "lm" engine.
+
+
 
