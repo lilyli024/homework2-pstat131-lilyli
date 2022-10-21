@@ -13,11 +13,13 @@ library(tidyverse)
 library(tidymodels)
 library(corrplot)
 library(readr)
+library(yardstick)
+tidymodels_prefer()
 abalone_data <- read_csv("~/Desktop/PSTAT 131/homework-2/data/abalone.csv") # read dataset through path
 ```
 
-## Q1: 
-#### Add age to the data set. Assess and describe the distribution of age.
+## Q1
+
 ```{r}
 abalone_data$age <- abalone_data$rings + 1.5
 
@@ -35,8 +37,8 @@ The distribution of age is skewed right with most points centered at the peak ar
 
 # Q2:
 ```{r}
-set.seed(123)
-data_split <- initial_split(abalone_data, prop = 3/4, strata = rings)
+set.seed(1234) # to reproduce results
+data_split <- initial_split(abalone_data, prop = 0.8, strata = rings)
 train_data <- training(data_split)
 test_data <- testing(data_split)
 ```
@@ -54,6 +56,49 @@ age_recipe <- recipe(age ~ ., data = select(train_data, -rings)) %>%
 
 ## Q4. 
 #### Create and store a linear regression object using the "lm" engine.
+
+```{r}
+lm_model <- linear_reg() %>% 
+  set_engine("lm")
+```
+
+## Q5.
+#### set up an empty workflow,add the model you created in Q4, and add recipe that you created in Q3.
+
+```{r}
+lm_wflow <- workflow() %>% 
+  add_model(lm_model) %>% 
+  add_recipe(age_recipe)
+```
+
+## Q6.
+#### Use fit() object to predict the age of a hypothetical female abalone with longest_shell = 0.50, diameter = 0.10, height = 0.30, whole_weight = 4, shucked_weight = 1, viscera_weight = 2, shell_weight = 1.
+
+```{r}
+fabalone_pred <-  tibble(longest_shell = 0.50, diameter = 0.10, height = 0.30, whole_weight = 4, shucked_weight = 1, viscera_weight = 2, shell_weight = 1)
+
+#fit the linear model to the training set
+lm_fit <- linear_reg() %>%
+  fit(age ~ ., data = select(train_data, -rings, -type))
+age_pred <- predict(lm_fit, new_data = fabalone_pred) # 14.38694
+```
+
+## Q7.
+
+```{r}
+age_train_res <- predict(lm_fit, new_data = train_data %>% select(-age))
+pred_act <- bind_cols(age_train_res, train_data %>% select(age))
+pred_act %>% 
+  ggplot(aes(x = .pred, y = age)) +
+  geom_point(alpha = 0.2) +
+  geom_abline(lty = 2) + 
+  theme_bw() +
+  coord_obs_pred()
+age_metrics <- metric_set(rmse, rsq, mae)
+age_metrics(pred_act, truth = age, 
+                estimate = .pred)
+```
+
 
 
 
