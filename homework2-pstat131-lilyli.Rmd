@@ -55,31 +55,31 @@ age_recipe <- recipe(age ~ ., data = select(train_data, -rings)) %>%
 ```
 
 ## Q4. 
-#### Create and store a linear regression object using the "lm" engine.
 
 ```{r}
+# specify a linear reg object using the "lm" engine
 lm_model <- linear_reg() %>% 
   set_engine("lm")
 ```
 
 ## Q5.
-#### set up an empty workflow,add the model you created in Q4, and add recipe that you created in Q3.
 
 ```{r}
+# use a workflow to pair a model and recipe
 lm_wflow <- workflow() %>% 
   add_model(lm_model) %>% 
   add_recipe(age_recipe)
 ```
 
 ## Q6.
-#### Use fit() object to predict the age of a hypothetical female abalone with longest_shell = 0.50, diameter = 0.10, height = 0.30, whole_weight = 4, shucked_weight = 1, viscera_weight = 2, shell_weight = 1.
 
 ```{r}
-fabalone_pred <-  tibble(longest_shell = 0.50, diameter = 0.10, height = 0.30, whole_weight = 4, shucked_weight = 1, viscera_weight = 2, shell_weight = 1)
+fabalone_pred <-  tibble(longest_shell = 0.50, diameter = 0.10, height = 0.30, whole_weight = 4, shucked_weight = 1, viscera_weight = 2, shell_weight = 1) # hypothetical observation
 
 #fit the linear model to the training set
 lm_fit <- linear_reg() %>%
   fit(age ~ ., data = select(train_data, -rings, -type))
+
 age_pred <- predict(lm_fit, new_data = fabalone_pred) # 14.38694
 ```
 
@@ -88,17 +88,17 @@ age_pred <- predict(lm_fit, new_data = fabalone_pred) # 14.38694
 ```{r}
 age_train_res <- predict(lm_fit, new_data = train_data %>% select(-age))
 pred_act <- bind_cols(age_train_res, train_data %>% select(age))
+# tibble of  predicted values with actual observed ages
 pred_act %>% 
   ggplot(aes(x = .pred, y = age)) +
   geom_point(alpha = 0.2) +
   geom_abline(lty = 2) + 
-  theme_bw() +
   coord_obs_pred()
 age_metrics <- metric_set(rmse, rsq, mae)
 age_metrics(pred_act, truth = age, 
                 estimate = .pred)
 ```
-
+$R^2$ estimates how well the regression model predicts actual observed ages. The estimate tells us that 0.5321263 (about half) is the proportion of variability in age is explained by the regression model. This is a low correlation between the predictors and age. RMSE measures how concentrated the data is around the regression line. The value 2.1981612 tells us how far off the age predictions may be from the actual ages. The MAE tells use the average distance from the actual ages and the mean age. This means that the ages are 1.6053366 far from the mean age regardless of direction. Since the points stray from the regression line, linear regression would not be the best model to predict age.
 
 
 
